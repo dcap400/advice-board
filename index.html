@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advice Board</title>
-    <link rel="stylesheet" href="styles.css">
     <style>
         /* Style for the creator button */
         .creator-button {
@@ -23,10 +22,40 @@
             background-color: #0056b3;
         }
     </style>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            padding: 1rem;
+        }
+        form {
+            margin-bottom: 2rem;
+        }
+        .advice {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .advice h3 {
+            margin: 0 0 0.5rem;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>Community Advice Board</h1>
+        <h1>قدم نصيحة</h1>
     </header>
     <main>
         <form id="adviceForm">
@@ -43,17 +72,15 @@
             <!-- User-submitted advice will appear here -->
         </div>
     </main>
-
-    <!-- Button for showing the creator's name -->
     <button class="creator-button" onclick="showCreatorName()">Creator</button>
+   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
-    <script>
-        // Initialize Firebase
-       const firebaseConfig = {
+<script>
+  // Your Firebase config (replace with your actual config)
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
   apiKey: "AIzaSyDhRxge6bboRAfgmrk4H13Hto77wpHhUvI",
   authDomain: "adviceboard-24b4a.firebaseapp.com",
   projectId: "adviceboard-24b4a",
@@ -63,64 +90,65 @@
   measurementId: "G-83FFVJND7C"
 };
 
-        firebase.initializeApp(firebaseConfig);
+ firebase.initializeApp(firebaseConfig);
 
-        // Initialize Firestore
-        const db = firebase.firestore();
-        const adviceCollection = db.collection('adviceBoard');
+// Initialize Firestore
+const db = firebase.firestore();
 
-        // Handle form submission
-        const adviceForm = document.getElementById('adviceForm');
-        adviceForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
+const adviceCollection = db.collection('adviceBoard');
 
-            const name = document.getElementById('name').value;
-            const advice = document.getElementById('advice').value;
+</script>
 
-            try {
-                // Add the advice to Firestore
-                await adviceCollection.add({
-                    name: name,
-                    advice: advice,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+<script>
+   // Handle form submission
+adviceForm.addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent form from refreshing the page
 
-                console.log('Advice successfully submitted!');
-                adviceForm.reset();
-            } catch (error) {
-                console.error('Error submitting advice:', error);
-            }
+    const name = document.getElementById('name').value;
+    const advice = document.getElementById('advice').value;
+
+    try {
+        // Add the advice to Firestore
+        await adviceCollection.add({
+            name: name,
+            advice: advice,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Real-time listener
-        const adviceList = document.getElementById('adviceList');
-        adviceCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-            adviceList.innerHTML = ''; // Clear the list
-            snapshot.forEach(doc => {
-                const adviceData = doc.data();
+        console.log('Advice successfully submitted!');
+        adviceForm.reset();
+    } catch (error) {
+        console.error('Error submitting advice:', error);
+    }
+});
 
-                // Create advice entry
-                const adviceDiv = document.createElement('div');
-                adviceDiv.classList.add('advice');
+// Real-time listener
+adviceCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    adviceList.innerHTML = ''; // Clear the list
+    snapshot.forEach(doc => {
+        const adviceData = doc.data();
 
-                const adviceName = document.createElement('h3');
-                adviceName.textContent = adviceData.name;
+        // Create advice entry
+        const adviceDiv = document.createElement('div');
+        adviceDiv.classList.add('advice');
 
-                const adviceText = document.createElement('p');
-                adviceText.textContent = adviceData.advice;
+        const adviceName = document.createElement('h3');
+        adviceName.textContent = adviceData.name;
 
-                adviceDiv.appendChild(adviceName);
-                adviceDiv.appendChild(adviceText);
+        const adviceText = document.createElement('p');
+        adviceText.textContent = adviceData.advice;
 
-                adviceList.appendChild(adviceDiv);
-            });
-            console.log('Advice list updated!');
-        });
+        adviceDiv.appendChild(adviceName);
+        adviceDiv.appendChild(adviceText);
 
-        // Show the creator's name
-        function showCreatorName() {
-            alert("Website created by: Your Name Here");
+        adviceList.appendChild(adviceDiv);
+    });
+    console.log('Advice list updated!');
+});
+   function showCreatorName() {
+            alert("جميع الحقوق تعود الى :( Almutasam-Alsharqi )");
         }
-    </script>
+  </script>
+  
 </body>
 </html>
