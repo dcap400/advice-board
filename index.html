@@ -76,45 +76,52 @@ const firebaseConfig = {
 </script>
 
 <script>
-    // Reference to Firestore collection
-    const adviceCollection = db.collection('adviceBoard');
-  
-    // Handle form submission
-    adviceForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
-  
-        const name = document.getElementById('name').value;
-        const advice = document.getElementById('advice').value;
-  
-        // Add advice to Firestore
-        await adviceCollection.add({ name, advice, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-  
-        // Clear the form
-        adviceForm.reset();
-    });
-  
-    // Listen for real-time updates
-    adviceCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-        adviceList.innerHTML = ''; // Clear the list
-        snapshot.forEach(doc => {
-            const adviceData = doc.data();
-  
-            // Create advice entry
-            const adviceDiv = document.createElement('div');
-            adviceDiv.classList.add('advice');
-  
-            const adviceName = document.createElement('h3');
-            adviceName.textContent = adviceData.name;
-  
-            const adviceText = document.createElement('p');
-            adviceText.textContent = adviceData.advice;
-  
-            adviceDiv.appendChild(adviceName);
-            adviceDiv.appendChild(adviceText);
-  
-            adviceList.appendChild(adviceDiv);
+   // Handle form submission
+adviceForm.addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent form from refreshing the page
+
+    const name = document.getElementById('name').value;
+    const advice = document.getElementById('advice').value;
+
+    try {
+        // Add the advice to Firestore
+        await adviceCollection.add({
+            name: name,
+            advice: advice,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        console.log('Advice successfully submitted!');
+        adviceForm.reset();
+    } catch (error) {
+        console.error('Error submitting advice:', error);
+    }
+});
+
+// Real-time listener
+adviceCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    adviceList.innerHTML = ''; // Clear the list
+    snapshot.forEach(doc => {
+        const adviceData = doc.data();
+
+        // Create advice entry
+        const adviceDiv = document.createElement('div');
+        adviceDiv.classList.add('advice');
+
+        const adviceName = document.createElement('h3');
+        adviceName.textContent = adviceData.name;
+
+        const adviceText = document.createElement('p');
+        adviceText.textContent = adviceData.advice;
+
+        adviceDiv.appendChild(adviceName);
+        adviceDiv.appendChild(adviceText);
+
+        adviceList.appendChild(adviceDiv);
     });
+    console.log('Advice list updated!');
+});
+
   </script>
   
 </body>
