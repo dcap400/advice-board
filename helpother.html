@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advice Board</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        main {
+            padding: 1rem;
+        }
+        form {
+            margin-bottom: 2rem;
+        }
+        .advice {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .advice h3 {
+            margin: 0 0 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Community Advice Board</h1>
+    </header>
+    <main>
+        <form id="adviceForm">
+            <label for="name">Your Name:</label><br>
+            <input type="text" id="name" name="name" required><br><br>
+
+            <label for="advice">Your Advice:</label><br>
+            <textarea id="advice" name="advice" rows="4" required></textarea><br><br>
+
+            <button type="submit">Submit</button>
+        </form>
+
+        <div id="adviceList">
+            <!-- User-submitted advice will appear here -->
+        </div>
+    </main>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"></script>
+
+<script>
+  // Your Firebase config (replace with your actual config)
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<script>
+    // Reference to Firestore collection
+    const adviceCollection = db.collection('adviceBoard');
+  
+    // Handle form submission
+    adviceForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+  
+        const name = document.getElementById('name').value;
+        const advice = document.getElementById('advice').value;
+  
+        // Add advice to Firestore
+        await adviceCollection.add({ name, advice, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+  
+        // Clear the form
+        adviceForm.reset();
+    });
+  
+    // Listen for real-time updates
+    adviceCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+        adviceList.innerHTML = ''; // Clear the list
+        snapshot.forEach(doc => {
+            const adviceData = doc.data();
+  
+            // Create advice entry
+            const adviceDiv = document.createElement('div');
+            adviceDiv.classList.add('advice');
+  
+            const adviceName = document.createElement('h3');
+            adviceName.textContent = adviceData.name;
+  
+            const adviceText = document.createElement('p');
+            adviceText.textContent = adviceData.advice;
+  
+            adviceDiv.appendChild(adviceName);
+            adviceDiv.appendChild(adviceText);
+  
+            adviceList.appendChild(adviceDiv);
+        });
+    });
+  </script>
+  
+</body>
+</html>
