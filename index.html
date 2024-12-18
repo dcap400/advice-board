@@ -18,6 +18,25 @@
             color: white;
             padding: 1rem;
             text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header .buttons-container {
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #0056b3;
         }
         main {
             padding: 1rem;
@@ -31,12 +50,32 @@
             margin-bottom: 1rem;
             background-color: #fff;
             border-radius: 5px;
+            position: relative;
         }
         .advice h3 {
             margin: 0 0 0.5rem;
         }
-        button {
+        .advice p {
+            margin: 0;
+        }
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
             cursor: pointer;
+        }
+        .delete-button:hover {
+            background-color: #ff1a1a;
+        }
+
+        /* Admin-Specific Styles */
+        .advice.admin h3 {
+            color: #4CAF50; /* Green for Admin */
         }
 
         /* Dark Mode Styles */
@@ -51,50 +90,20 @@
             background-color: #333;
             border-color: #555;
         }
-        body.dark-mode button {
-            background-color: #444;
-            color: white;
-        }
-
-        /* Creator Button Styles */
-        .creator-button {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 10px 20px;
-            background-color: #50ac54;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        .creator-button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Dark Mode Toggle Button */
-        .dark-mode-toggle {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        .dark-mode-toggle:hover {
-            background-color: #45a049;
+        body.dark-mode .delete-button {
+            background-color: #ff3333;
         }
     </style>
 </head>
 <body>
     <header>
         <h1>قدم نصيحة</h1>
+        <div class="buttons-container">
+            <button class="button" onclick="toggleDarkMode()">Dark Mode</button>
+            <button class="button" onclick="adminLogin()">Admin Login</button>
+            <button class="button" onclick="showCreatorName()">Creator</button>
+        </div>
     </header>
-    <button class="dark-mode-toggle" onclick="toggleDarkMode()">Dark Mode</button>
-    <button class="creator-button" onclick="showCreatorName()">Creator</button>
     <main>
         <form id="adviceForm">
             <label for="name">Your Name:</label><br>
@@ -131,6 +140,10 @@
         const db = firebase.firestore();
         const adviceCollection = db.collection('adviceBoard');
 
+        // Admin Password
+        const adminPassword = "MRTT"; // Change this to your desired admin password
+        let isAdmin = false; // Tracks if the admin is logged in
+
         // Handle form submission
         const adviceForm = document.getElementById('adviceForm');
         adviceForm.addEventListener('submit', async function(event) {
@@ -160,6 +173,7 @@
             adviceList.innerHTML = ''; // Clear the list
             snapshot.forEach(doc => {
                 const adviceData = doc.data();
+                const adviceId = doc.id;
 
                 // Create advice entry
                 const adviceDiv = document.createElement('div');
@@ -174,6 +188,22 @@
                 adviceDiv.appendChild(adviceName);
                 adviceDiv.appendChild(adviceText);
 
+                // Add delete button if admin is logged in
+                if (isAdmin) {
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.onclick = async () => {
+                        try {
+                            await adviceCollection.doc(adviceId).delete();
+                            console.log('Advice successfully deleted!');
+                        } catch (error) {
+                            console.error('Error deleting advice:', error);
+                        }
+                    };
+                    adviceDiv.appendChild(deleteButton);
+                }
+
                 adviceList.appendChild(adviceDiv);
             });
             console.log('Advice list updated!');
@@ -187,6 +217,55 @@
         // Dark Mode Toggle
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
+        }
+
+        // Admin Login
+        function adminLogin() {
+            const password = prompt("Enter Admin Password:");
+            if (password === adminPassword) {
+                isAdmin = true;
+                alert("Admin logged in successfully!");
+                // Reload the advice list to show delete buttons
+                adviceCollection.orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                    adviceList.innerHTML = ''; // Clear the list
+                    snapshot.forEach(doc => {
+                        const adviceData = doc.data();
+                        const adviceId = doc.id;
+
+                        // Create advice entry
+                        const adviceDiv = document.createElement('div');
+                        adviceDiv.classList.add('advice');
+
+                        const adviceName = document.createElement('h3');
+                        adviceName.textContent = adviceData.name;
+
+                        const adviceText = document.createElement('p');
+                        adviceText.textContent = adviceData.advice;
+
+                        adviceDiv.appendChild(adviceName);
+                        adviceDiv.appendChild(adviceText);
+
+                        // Add delete button for admin
+                        const deleteButton = document.createElement('button');
+                        deleteButton.classList.add('delete-button');
+                        deleteButton.textContent = 'Delete';
+                        deleteButton.onclick = async () => {
+                            try {
+                                await adviceCollection.doc(adviceId).delete();
+                                console.log('Advice successfully deleted!');
+                            } catch (error) {
+                                console.error('Error deleting advice:', error);
+                            }
+                        };
+                        adviceDiv.appendChild(deleteButton);
+
+                        adviceList.appendChild(adviceDiv);
+                    });
+                    console.log('Advice list updated!');
+                });
+            } else {
+                alert("Incorrect password!");
+            }
         }
     </script>
 </body>
